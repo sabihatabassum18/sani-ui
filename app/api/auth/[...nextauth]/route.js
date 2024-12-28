@@ -13,7 +13,7 @@ const handler = NextAuth({
             async authorize(credentials) {
                 try {
                     // Replace with your Node.js authentication API URL
-                    const response = await axios.post("http://localhost:8000/api/users/login", {
+                    const response = await axios.post("https://saniz.vercel.app/api/users/login", {
                         email: credentials.email,
                         password: credentials.password,
                     });

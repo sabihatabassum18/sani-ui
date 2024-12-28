@@ -51,7 +51,7 @@ export default function Dashboard() {
             refreshSession();
 
             const response = await axios.post(
-                "http://localhost:8000/api/image-generation",
+                "https://saniz.vercel.app/api/image-generation",
                 {
                     prompt: prompt,
                 },
@@ -115,7 +115,7 @@ export default function Dashboard() {
             return;
         }
         try {
-            const response = await fetch("http://localhost:8000/api/users/profile", {
+            const response = await fetch("https://saniz.vercel.app/api/users/profile", {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

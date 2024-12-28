@@ -16,7 +16,7 @@ export default function SignupPage() {
         const email = data.get("email");
         const password = data.get("password");
 
-        const response = await fetch("http://localhost:8000/api/users/register", {
+        const response = await fetch("https://saniz.vercel.app/api/users/register", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
