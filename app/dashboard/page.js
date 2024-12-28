@@ -1,26 +1,9 @@
 "use client";
 
-import { useSession, signOut, signIn } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import axios from "axios";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getSession } from "next-auth/react";
-
-export async function updateSessionData(updatedData) {
-    const session = await getSession();
-    console.log("Session before update:", session);
-    // Use `signIn` to update the session with new data
-    await signIn("credentials", {
-        redirect: false, // Prevent page reload
-        session: {
-            ...session,
-            user: {
-                ...session.user,
-                ...updatedData,
-            },
-        },
-    });
-}
 
 
 export default function Dashboard() {
@@ -31,6 +14,7 @@ export default function Dashboard() {
     const [error, setError] = useState("");
     const [prompt, setPrompt] = useState("");
     const router = useRouter();
+    const [profile, setProfile] = useState({});
 
 
     const fetchImage = async (e) => {
@@ -109,38 +93,40 @@ export default function Dashboard() {
         }
     };
 
+
+
     const refreshSession = async () => {
         const token = session?.user?.accessToken;
         if (!token) {
             return;
         }
         try {
-            const response = await fetch("https://saniz.vercel.app/api/users/profile", {
+            const response = await axios.get("https://saniz.vercel.app/api/users/profile", {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            const updatedData = await response.json();
+            const updatedData = response.data;
+            console.log("Updated data:", updatedData);
 
-            // Update session with the latest data
-            const updateDto = {
-                creditToken: updatedData.token,
-                subscriptionType: updatedData.subscription.type,
+            if (response.status === 200) {
+                setProfile({ ...updatedData });
+                console.log("Profile:", profile);
             }
 
-            const res = await fetch("/api/update-session", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(updateDto),
-            });
-            await update(updateDto);
-            console.log("Session updated:", updateDto);
+
         } catch (error) {
             console.error("Failed to refresh session:", error);
         }
     };
+
+    useEffect(() => {
+        if (session) {
+            (async () => {
+                await refreshSession();
+            })();
+        }
+    }, [session]);
 
     return (
         <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen  pb-20 sm:pb-20  sm:p-10 font-[family-name:var(--font-geist-sans)]">
@@ -165,16 +151,16 @@ export default function Dashboard() {
                             className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
                             <li>
                                 <a className="justify-between">
-                                    {session?.user?.name}
-                                    <span className="badge">T: {session?.user?.creditToken}</span>
+                                    {profile?.name}
+                                    <span className="badge">T: {profile?.token}</span>
                                 </a>
                             </li>
                             <li>
-                                {session?.user?.subscriptionType === "trial" ? <a>Try Premium
+                                {profile?.subscription?.type === "trial" ? <a>Try Premium
                                     <svg fill="#FFD700" width="15px" height="15px" viewBox="0 -5.47 56.254 56.254" xmlns="http://www.w3.org/2000/svg">
                                         <path id="diamond_premium" data-name="diamond premium" d="M494.211,354.161l1.174-1.366H482.552L469.8,367.5h12.94Zm-8.4,13.336H510.05l-6.589-7.664-5.528-6.429-8.354,9.713Zm-15.856,2.329,24.1,25.356L482.53,369.826Zm40.824,0h-2.1l-8.829,0H485.083l12.774,28.1.082.178,12.17-26.8Zm-8.94,25.322,24.057-25.32H513.337Zm24.215-27.65L513.3,352.8H500.478l12.642,14.7Z" transform="translate(-469.802 -352.795)" />
                                     </svg>
-                                </a> : <a>{session?.user?.subscriptionType} User</a>}
+                                </a> : <a>{profile?.subscription?.type} User</a>}
                             </li>
                             <li><a onClick={() => signOut({ callbackUrl: "/login" })}>Logout</a></li>
                         </ul>
